@@ -1,0 +1,28 @@
+{
+  "name": "pv-stats-loader",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mat127/pv-stats-loader.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mat127/pv-stats-loader/issues"
+  },
+  "homepage": "https://github.com/mat127/pv-stats-loader#readme",
+  "devDependencies": {
+    "typescript": "^5.2.2"
+  },
+  "dependencies": {
+    "@types/pg": "^8.10.7",
+    "axios": "^1.6.0",
+    "pg": "^8.11.3"
+  }
+}
