@@ -13,25 +13,28 @@ export const db = {
     load: async function (data: CurveItem[]) {
         for (const item of data) {
             const date = new Date(item.dateStamp);
+            const fixed = { // store 0 if value is missing
+              power: item.power ?? 0,
+              loadPower: item.loadPower ?? 0,
+              battery: item.battery ?? 0,
+              pMeter: item.pMeter ?? 0,
+              SOC: item.SOC ?? 0
+            };
             const query = {
-              text:
-                'INSERT INTO pv(ts, power, load, battery, meter, soc) VALUES($1, $2, $3, $4, $5, $6)',
+              text: `INSERT INTO pv(ts, power, load, battery, meter, soc)
+                     VALUES($1, $2, $3, $4, $5, $6)
+                     ON CONFLICT (ts) DO UPDATE SET power=excluded.power, load=excluded.load,
+                      battery=excluded.battery, meter=excluded.meter, soc=excluded.soc`,
               values: [
                   date,
-                  Math.round(item.power*100),
-                  Math.round(item.loadPower*100),
-                  Math.round(item.battery*100),
-                  Math.round(item.pMeter*100),
-                  Math.round(item.SOC*100)
+                  Math.round(fixed.power*1000),
+                  Math.round(fixed.loadPower*1000),
+                  Math.round(fixed.battery*1000),
+                  Math.round(fixed.pMeter*1000),
+                  Math.round(fixed.SOC*100)
               ],
             };
-            try {
-                const res = await pool.query(query);
-                console.log(`Inserted curve data for dateStamp: ${date}`);
-            } catch (err) {
-                console.error('Error inserting curve data:', err);
-                break;
-            }
+          await pool.query(query);
         }
     }
 }

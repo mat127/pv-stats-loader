@@ -23,14 +23,13 @@ if(!process.env.WS_AUTH) {
     throw new Error('WS_AUTH not defined');
 }
 
-export async function getCurve(date?: Date): Promise<StationCurve> {
-    const _date = date ?? new Date();
+export async function getCurve(date: Date): Promise<StationCurve> {
     const payload = {
-        date: _date.toISOString().split('T')[0],
+        date: date.toISOString().split('T')[0],
         durationType: 1,
         stationId,
         stationType: 0,
-        timeZoneOffset: 60,
+        timeZoneOffset: -date.getTimezoneOffset(), // to get correct dateStamp values
         type: 'update'
     };
     return axios.post(wattsonicCloudUrl, payload, {
