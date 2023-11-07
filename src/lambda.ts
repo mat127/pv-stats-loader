@@ -1,27 +1,33 @@
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { db } from "./db";
-import { getCurve } from "./ws";
+import { APIGatewayProxyResult } from 'aws-lambda';
+import { Loader } from "./loader";
 
-export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    try {
-        const date = new Date();
-        console.log(`Loading data of ${date.toISOString()}.`);
-        const response = await getCurve(date);
-        await db.load(response.data.curve);
-        return {
-            statusCode: 200,
-            body: JSON.stringify({
-                message: `Data of ${date.toISOString()} loaded.`,
-            }),
-        };
+interface LoadSchedulerEvent {
+  loadLastHours?: number,
+  loadYesterday?: boolean
+}
+
+export const handler = async (event: LoadSchedulerEvent): Promise<APIGatewayProxyResult> => {
+  try {
+    if (event.loadYesterday) {
+      await Loader.loadYesterday();
     }
-    catch (err) {
-        console.log(err);
-        return {
-            statusCode: 500,
-            body: JSON.stringify({
-                message: 'some error happened',
-            }),
-        };
+    else if (event.loadLastHours) {
+      await Loader.loadLastHours(event.loadLastHours);
     }
-};
+    return {
+      statusCode: 200,
+      body: JSON.stringify({
+        message: `Data loaded.`,
+      }),
+    };
+  }
+  catch (err) {
+    console.log(err);
+    return {
+      statusCode: 500,
+      body: JSON.stringify({
+        message: 'some error happened',
+      }),
+    };
+  }
+}

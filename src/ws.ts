@@ -43,9 +43,15 @@ const token = {
     }
 };
 
+function getDateString(date: Date): string {
+  const month = date.getMonth() + 1;
+  const dayOfMonth = date.getDate();
+  return `${date.getFullYear()}-${month.toString().padStart(2, '0')}-${dayOfMonth.toString().padStart(2, '0')}`;
+}
+
 export async function getCurve(date: Date): Promise<StationCurve> {
     const payload = {
-        date: date.toISOString().split('T')[0],
+        date: getDateString(date),
         durationType: 1,
         stationId: process.env.STATION_ID,
         stationType: 0,

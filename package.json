@@ -5,7 +5,9 @@
   "main": "cli.js",
   "scripts": {
     "compile": "npx tsc --watch",
-    "lambda-pack": "zip -r lambda.zip ./build ./node_modules/ package.json",
+    "prelambda-pack": "rm -f lambda.zip",
+    "lambda-pack": "zip -j lambda.zip ./build/*",
+    "postlambda-pack": "zip -r lambda.zip ./node_modules/ package.json",
     "lambda-deploy": "aws lambda update-function-code --function-name pv-stats-loader --zip-file fileb://lambda.zip"
   },
   "repository": {
