@@ -4,7 +4,7 @@
   "description": "",
   "main": "main.js",
   "scripts": {
-    "start": "node build/main.js",
+    "compile": "npx tsc --watch",
     "lambda-pack": "zip -r lambda.zip ./build ./node_modules/ package.json",
     "lambda-deploy": "aws lambda update-function-code --function-name pv-stats-loader --zip-file fileb://lambda.zip"
   },
