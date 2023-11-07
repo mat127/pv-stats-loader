@@ -2,7 +2,7 @@
   "name": "pv-stats-loader",
   "version": "1.0.0",
   "description": "",
-  "main": "main.js",
+  "main": "cli.js",
   "scripts": {
     "compile": "npx tsc --watch",
     "lambda-pack": "zip -r lambda.zip ./build ./node_modules/ package.json",
