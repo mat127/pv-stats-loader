@@ -56,7 +56,7 @@ export async function getCurve(date: Date): Promise<StationCurve> {
         stationId: process.env.STATION_ID,
         stationType: 0,
         timeZoneOffset: -date.getTimezoneOffset(), // to get correct dateStamp values
-        type: 'update'
+        type: 'init'
     };
     const auth = await token.get();
     return axios.post(`${wattsonicCloudUrl}/curve/station/queryStationCurve`, payload, {
