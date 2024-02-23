@@ -1,5 +1,6 @@
 import { APIGatewayProxyResult } from 'aws-lambda';
 import { Loader } from "./loader";
+import {WattSonicCurveLoader} from "./ws";
 
 interface LoadSchedulerEvent {
   loadLastHours?: number,
@@ -8,11 +9,12 @@ interface LoadSchedulerEvent {
 
 export const handler = async (event: LoadSchedulerEvent): Promise<APIGatewayProxyResult> => {
   try {
+    const loader = Loader.withPlugins(new WattSonicCurveLoader());
     if (event.loadYesterday) {
-      await Loader.loadYesterday();
+      await loader.loadYesterday();
     }
     else if (event.loadLastHours) {
-      await Loader.loadLastHours(event.loadLastHours);
+      await loader.loadLastHours(event.loadLastHours);
     }
     return {
       statusCode: 200,
