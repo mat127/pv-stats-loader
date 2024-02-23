@@ -1,47 +1,43 @@
-import {CurveItem, getCurve} from "./ws";
-import {db} from "./db";
+import {plusHours, truncateToDate, yesterday} from "./date";
 
-export function plusHours(date: Date, hours: number): Date {
-  return new Date(date.getTime() + hours*60*60*1000);
-}
-
-export function truncateToDate(date: Date) {
-  const truncated = new Date(date);
-  truncated.setHours(0, 0, 0, 0);
-  return truncated;
-}
-
-export function yesterday(): Date {
-  return plusHours(new Date(), -24);
+export interface LoaderPlugin<Item> {
+  load(date: Date): Promise<Item[]>
+  getTimeOf(item: Item): number
+  save(item: Item): Promise<void>
 }
 
 export class Loader {
+
+  private plugins: LoaderPlugin<any>[] = [];
 
   private dates: Date[] = [];
   private sinceTimestamp?: number;
   private tillTimestamp?: number;
 
-  static async loadDays(since: Date, till: Date) {
+  static withPlugins(...plugins: LoaderPlugin<any>[]): Loader {
     const loader = new Loader();
-    loader.dates = Loader.getAllDates(since,till);
-    loader.sinceTimestamp = since.getTime();
-    loader.tillTimestamp = till.getTime();
-    await loader.load();
+    loader.plugins = [...plugins];
+    return loader;
   }
 
-  static async loadYesterday() {
+  async loadDays(since: Date, till: Date) {
+    this.dates = Loader.getAllDates(since,till);
+    this.sinceTimestamp = since.getTime();
+    this.tillTimestamp = till.getTime();
+    await this.load();
+  }
+
+  async loadYesterday() {
     const _yesterday = yesterday();
-    const loader = new Loader();
-    loader.dates = [_yesterday];
-    await loader.load();
+    this.dates = [_yesterday];
+    await this.load();
   }
 
-  static async loadLastHours(hours: number) {
+  async loadLastHours(hours: number) {
     const now = new Date();
-    const loader = new Loader();
-    loader.dates = [now];
-    loader.sinceTimestamp = now.getTime() - hours*60*60*1000;
-    await loader.load();
+    this.dates = [now];
+    this.sinceTimestamp = now.getTime() - hours*60*60*1000;
+    await this.load();
   }
 
   static getAllDates(since: Date, till: Date): Date[] {
@@ -61,24 +57,32 @@ export class Loader {
   }
 
   private async loadDate(date: Date) {
-    console.log(`Loading data of ${date}.`);
-    const response = await getCurve(date);
+    return Promise.all(
+      this.plugins.map(p => this.loadDateWith(date, p))
+    );
+  }
+
+  private async loadDateWith(date: Date, plugin: LoaderPlugin<any>) {
+    console.log(`Loading ${plugin.constructor.name} data of ${date}.`);
+    const items = await plugin.load(date);
     for(const item of
-      this.getRequested(response.data.curve)
+      this.getRequested(items, plugin)
     ) {
-      await db.load(item);
+      await plugin.save(item);
     }
   }
 
-  private getRequested(items: CurveItem[]) {
-    return items.filter(i => this.isRequested(i));
+  private getRequested(items: any[], plugin: LoaderPlugin<any>) {
+    return items.map(i => { return {item: i, ts: plugin.getTimeOf(i)}})
+      .filter(tuple => this.isRequested(tuple.ts))
+      .map(tuple => tuple.item);
   }
 
-  private isRequested(item: CurveItem): boolean {
-    if (this.sinceTimestamp && this.sinceTimestamp > item.dateStamp) {
+  private isRequested(timestamp: number): boolean {
+    if (this.sinceTimestamp && this.sinceTimestamp > timestamp) {
       return false;
     }
-    if (this.tillTimestamp && this.tillTimestamp < item.dateStamp) {
+    if (this.tillTimestamp && this.tillTimestamp < timestamp) {
       return false;
     }
     return true;
