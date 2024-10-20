@@ -1,5 +1,5 @@
 import { Pool } from 'pg'
-import { CurveItem } from './ws'
+import { StationStatsItem } from './ws'
  
 if(!process.env.DB_URL) {
     throw new Error('DB_URL is not defined');
@@ -10,14 +10,14 @@ const pool = new Pool({
 });
  
 export const db = {
-  load: async function (item: CurveItem) {
-    const date = new Date(item.dateStamp);
+  load: async function (item: StationStatsItem) {
+    const date = new Date(item.timestamp);
     const fixed = { // store 0 if value is missing
-      power: item.power ?? 0,
-      loadPower: item.loadPower ?? 0,
-      battery: item.battery ?? 0,
-      pMeter: item.pMeter ?? 0,
-      SOC: item.SOC ?? 0
+      power: item.pv_power ?? 0,
+      loadPower: item.load_power ?? 0,
+      battery: item.battery_power ?? 0,
+      pMeter: item.meter_power ?? 0,
+      SOC: item.soc ?? 0
     };
     const query = {
       text: `INSERT INTO pv(ts, power, load, battery, meter, soc)
