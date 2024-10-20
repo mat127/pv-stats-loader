@@ -1,4 +1,4 @@
-import {CurveItem, getCurve} from "./ws";
+import {StationStatsItem, getStats} from "./ws";
 import {db} from "./db";
 
 export function plusHours(date: Date, hours: number): Date {
@@ -62,23 +62,23 @@ export class Loader {
 
   private async loadDate(date: Date) {
     console.log(`Loading data of ${date}.`);
-    const response = await getCurve(date);
+    const stats = await getStats(date);
     for(const item of
-      this.getRequested(response.data.curve)
+      this.getRequested(stats)
     ) {
       await db.load(item);
     }
   }
 
-  private getRequested(items: CurveItem[]) {
+  private getRequested(items: StationStatsItem[]) {
     return items.filter(i => this.isRequested(i));
   }
 
-  private isRequested(item: CurveItem): boolean {
-    if (this.sinceTimestamp && this.sinceTimestamp > item.dateStamp) {
+  private isRequested(item: StationStatsItem): boolean {
+    if (this.sinceTimestamp && this.sinceTimestamp > item.timestamp) {
       return false;
     }
-    if (this.tillTimestamp && this.tillTimestamp < item.dateStamp) {
+    if (this.tillTimestamp && this.tillTimestamp < item.timestamp) {
       return false;
     }
     return true;
